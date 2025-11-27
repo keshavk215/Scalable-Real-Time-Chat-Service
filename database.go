@@ -8,7 +8,6 @@ import (
 	_ "github.com/lib/pq" // Postgres driver
 )
 
-// Message struct defines our data shape
 type Message struct {
 	ID        int       `json:"id"`
 	Content   string    `json:"content"`
@@ -24,7 +23,7 @@ func initDB(dataSourceName string) {
 		log.Panic(err)
 	}
 
-	// Instead of panicking immediately, we try to connect 10 times.
+	// Ping with retries.
 	// This handles the case where the Docker container is still booting up.
 	for i := 0; i < 10; i++ {
 		err = db.Ping()
@@ -67,8 +66,7 @@ func saveMessage(content string) {
 }
 
 func getRecentMessages() []string {
-	// Resume Point: "Indexing for fast query performance"
-	// We fetch the last 50 messages. The Index helps this sort happen instantly.
+	// Fetch last 50 messages ordered by creation time descending 
 	rows, err := db.Query("SELECT content FROM messages ORDER BY created_at DESC LIMIT 50")
 	if err != nil {
 		log.Println(err)

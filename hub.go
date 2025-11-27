@@ -7,13 +7,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-// Hub maintains the set of active clients and broadcasts messages to the
-// clients.
 type Hub struct {
-	// Registered clients. (A map is like a Python Dictionary)
+	// Registered clients.
 	clients map[*Client]bool
 
-	// Inbound messages from the clients. (A Channel! Thread-safe pipe)
+	// Inbound messages from the clients.
 	// Messages from local clients (to be published to Redis)
 	broadcast chan []byte
 
@@ -37,13 +35,11 @@ func newHub() *Hub {
 	}
 }
 
-// This runs as a dedicated Goroutine (Infinite Loop)
-// run is the main event loop
-// It now takes a Redis client as an argument
+// A dedicated Goroutine (Infinite Loop)
 func (h *Hub) run(rdb *redis.Client) {
 
 	// 1. Start a background Goroutine to listen to Redis
-	// It pumps messages from Redis -> h.redisInbound
+	// Pumps messages from Redis -> h.redisInbound
 	go func() {
 		ctx := context.Background()
 		pubsub := rdb.Subscribe(ctx, "chat_room")
@@ -52,7 +48,7 @@ func (h *Hub) run(rdb *redis.Client) {
 		ch := pubsub.Channel()
 
 		for msg := range ch {
-			// When Redis sends a message, push it to our main loop
+			// When Redis sends a message, push it to main loop
 			h.redisInbound <- []byte(msg.Payload)
 		}
 	}()

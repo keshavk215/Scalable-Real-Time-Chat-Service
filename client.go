@@ -13,18 +13,17 @@ const (
 	writeWait = 10 * time.Second
 	// Time allowed to read the next pong message from the peer.
 	pongWait = 60 * time.Second
-	// Send pings to peer with this period. Must be less than pongWait.
+	// Send pings to peer with this period. 
 	pingPeriod = (pongWait * 9) / 10
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// Allow connections from any origin (Crucial for testing)
+	// Allow connections from any origin (for testing purposes)
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-// Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	hub *Hub
 	// The websocket connection.

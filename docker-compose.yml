@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: chat_db
     ports:
-      - "5433:5432" # Maps container port to your localhost
+      - "5433:5432" # Maps container port to localhost
     volumes:
       - pgdata:/var/lib/postgresql/data # Persists data even if container stops
 
@@ -19,8 +19,8 @@ services:
     image: redis:alpine
     container_name: chat_redis
     ports:
-      - "6379:6379" # Maps container port to your localhost
+      - "6379:6379" # Maps container port to localhost
 
-# Define where to store the database files on your computer
+# Define where to store the database files on the computer
 volumes:
   pgdata: 
