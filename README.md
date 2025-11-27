@@ -1,38 +1,73 @@
-# Scalable Real-Time Chat Service in Go
+# Scalable Real-Time Chat System (Go, Redis, PostgreSQL)
 
-A high-performance, real-time chat service built in Go, designed for massive concurrency and horizontal scalability. This project demonstrates advanced backend engineering principles, including real-time communication with WebSockets, state management, and distributed messaging with Redis.
+## 📌 Project Overview
 
-## Key Features
+A high-performance, real-time chat backend designed to handle high concurrency and horizontal scaling. The system uses **Go** for the backend logic, **Redis Pub/Sub** for distributing messages across server instances, and **PostgreSQL** for durable data storage.
 
-- **Real-Time Messaging**: Low-latency, bi-directional communication between thousands of clients using WebSockets.
-- **High Concurrency**: Leverages Go's native concurrency model (Goroutines and Channels) to efficiently handle a large number of simultaneous connections.
-- **Horizontal Scalability**: Uses a Redis Pub/Sub backend as a message broker, allowing the service to be deployed across multiple server instances without losing state.
-- **Multiple Chat Rooms**: Supports the creation of and subscription to different chat rooms.
-- **Persistent Data**: Stores user profiles, chat history, and room information in a PostgreSQL database.
+This project demonstrates the transition from a simple in-memory chat application to a distributed system architecture.
 
-## Tech Stack
+## 🚀 Key Features
 
-- **Language**: Go
-- **Real-Time Communication**: WebSockets (`gorilla/websocket` library)
-- **State Management & Messaging**: Redis (Pub/Sub)
-- **Database**: PostgreSQL (`pq` driver)
-- **Containerization**: Docker
+* **High Concurrency:** Implemented using Go **Goroutines** and **Channels** to manage thousands of active WebSocket connections efficiently.
+* **Low Latency:** Uses **WebSockets** for bi-directional, real-time communication (unlike HTTP polling).
+* **Horizontal Scaling:** Integrated **Redis Pub/Sub** as a message broker. This allows multiple Go server instances to talk to each other, preventing "siloed" chat rooms.
+* **Data Persistence:** Designed a **PostgreSQL** schema with indexing (`CREATE INDEX`) to optimize the retrieval of chat history (O(log n) performance).
+* **Containerization:** Uses **Docker Compose** to orchestrate the database and message broker services.
 
-## Architecture Overview
+## 🛠️ Tech Stack
 
-The system is designed to be horizontally scalable. When a user sends a message via their WebSocket connection to one server instance, that instance does not broadcast the message directly to other connected clients. Instead, it publishes the message to a specific Redis channel.
+* **Language:** Go (Golang)
+* **Real-time Protocol:** WebSockets (`gorilla/websocket`)
+* **Message Broker:** Redis
+* **Database:** PostgreSQL (`lib/pq`)
+* **Infrastructure:** Docker
 
-All server instances are subscribed to the Redis channels. When a message is published, Redis broadcasts it to *all* server instances. Each instance then checks which of its locally connected clients are subscribed to that chat room and forwards the message to them via their WebSocket connections. This architecture decouples the servers and allows the system to scale to handle an immense number of users.
+## ⚙️ How to Run
 
-## Setup and Installation (Placeholder)
+### 1. Prerequisites
 
-1. Clone the repository.
-2. Ensure you have Go, Docker, Redis, and PostgreSQL installed.
-3. Install Go dependencies: `go mod tidy`
-4. Build the application: `go build ./cmd/main.go`
+* Go 1.18+
+* Docker & Docker Compose
 
-## Usage (Placeholder)
+### 2. Start Infrastructure
 
-Run the compiled application: `./main`
+Spin up the Redis and PostgreSQL containers:
 
-The server will start on `localhost:8080`. Clients can connect to the WebSocket endpoint at `ws://localhost:8080/ws`.
+```
+docker-compose up -d
+```
+
+### 3. Run the Server
+
+Run the Go application (this handles DB migrations automatically):
+
+```
+go run main.go hub.go client.go database.go
+```
+
+### 4. Usage
+
+* Open `http://localhost:8080` in your browser.
+* Open a second tab (or a different browser) to the same URL.
+* Messages sent in one tab will appear in the other instantly (Real-time).
+* Refreshing the page will load previous messages (Persistence).
+
+## 📐 Architecture Diagram
+
+```
+graph TD
+    User1[Client A] -->|WebSocket| LB[Go Server Instance 1]
+    User2[Client B] -->|WebSocket| LB2[Go Server Instance 2]
+  
+    LB -->|Publish/Subscribe| Redis[(Redis Pub/Sub)]
+    LB2 -->|Publish/Subscribe| Redis
+  
+    LB -->|Read/Write| DB[(PostgreSQL)]
+    LB2 -->|Read/Write| DB
+```
+
+## 🔍 Code Highlights
+
+* **`hub.go`** : Manages the "Room" state and handles the Redis Pub/Sub integration.
+* **`client.go`** : Handles individual WebSocket connections using dedicated Goroutines for Reading and Writing.
+* **`database.go`** : manages SQL connections and ensures indexes are created on startup.

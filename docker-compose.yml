@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # Service 1: PostgreSQL (Stores Chat History)
+  postgres:
+    image: postgres:13-alpine
+    container_name: chat_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chat_db
+    ports:
+      - "5433:5432" # Maps container port to your localhost
+    volumes:
+      - pgdata:/var/lib/postgresql/data # Persists data even if container stops
+
+  # Service 2: Redis (Handles Real-time Pub/Sub)
+  redis:
+    image: redis:alpine
+    container_name: chat_redis
+    ports:
+      - "6379:6379" # Maps container port to your localhost
+
+# Define where to store the database files on your computer
+volumes:
+  pgdata: 
